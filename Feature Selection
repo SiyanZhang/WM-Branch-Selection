@@ -1,0 +1,67 @@
+from IPython.core.interactiveshell import InteractiveShell
+InteractiveShell.ast_node_interactivity = "all"
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib as matplot
+import seaborn as sns
+%matplotlib inline
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_selection import SelectFromModel
+from sklearn.model_selection import train_test_split
+
+df = pd.read_csv("../finalized data.csv")
+
+# Normalization:
+from sklearn import preprocessing
+
+x = df.values #returns a numpy array
+min_max_scaler = preprocessing.MinMaxScaler()
+x_scaled = min_max_scaler.fit_transform(x)
+result= pd.DataFrame(x_scaled)
+
+X = result[['inc_100000','% edu_HS', '% edu_Ms', '# HHs', '# HU', '% H_2010', '% H_1939',
+       '# Households', '# mort_p', '# PBS', '# auto_p', '# BCA_P', '# COD',
+       '# ATM', '# Mobile ', '# OB', '# BIP', '# DB', '# PS', '# PL&M',
+       '# SBLM', 'healthcare', 'avg_healthcare', 'health_ins',
+       'com_health_ins', 'avg_health_ins', 'avg_com_health_ins', 'med_s',
+       'avg_med_s', 'dental_s', 'avg_dental_s', '# PPU', '# not_TP', '# TP_M',
+       '# TP_F', '#not_TP_M', '# PU_M', '# PU_F', '# not_TP_F', 'avg_HI',
+       'median_HI', 'HI_PC', 'THI', 'TPI', 'High_HI', '# Pop', 'PD', '# Urban',
+       '# Rural', '# Male', '# Female', '# Household', '# NFP', '# Age_0_5',
+       '# Age_6_11', '# Age_12_17', '# Age_18_24', '# Age_25_34',
+       '# Age_35_44', '# Age_45_54', '# Age_55_64 Years, 2010',
+       '# Age_over_65', 'HMV', '# H_NoV', 'Trans', 'avg_trans', 'Vehi_pur',
+       'avg_vehi_pur', 'Count_competitors', 'avg comp sales volume',
+       'avg comp employee size']]
+
+y = result['Target']
+
+# Split dataset into training set and test set
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+
+#Create a Gaussian Classifier
+clf=RandomForestClassifier(n_estimators=100)
+
+#Train the model using the training sets y_pred=clf.predict(X_test)
+
+clf.fit(X_train,y_train)
+
+X_train.shape #((343, 71)
+
+model = SelectFromModel(clf, prefit=True)
+X_new = model.transform(X_train)
+X_new.shape #(343, 24)
+
+feature_imp = pd.Series(clf.feature_importances_,index=result.feature_names).sort_values(ascending=False)
+feature_importances=feature_imp[0:X_new.shape[1]]
+feature_importances
+
+# Creating a bar plot
+sns.barplot(x=feature_importances, y=feature_importances.index)
+# Add labels to your graph
+plt.xlabel('Feature Importance Score')
+plt.ylabel('Features')
+plt.title("Visualizing Important Features")
+plt.legend()
+plt.show()
